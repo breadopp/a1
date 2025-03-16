@@ -3,16 +3,19 @@ function Home() {
 return <h2>Welcome to the Home Page!</h2>;
 }
 export default Home;
+-----------------------------------------------
 About.js
 function About() {
 return <h2>About Us</h2>;
 }
 export default About;
+-----------------------------------------------
 Contact.js
 function Contact() {
 return <h2>Contact Us</h2>;
 }
 export default Contact;
+-----------------------------------------------
 Navbar.js
 import { Link } from "react-router-dom";
 function Navbar() {
