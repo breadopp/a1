@@ -1,50 +1,50 @@
-import * as React from 'react';
-import { TextField, Button } from '@mui/material';
-function App() {
-// State hooks for first name and last name
-const [firstName, setFirstName] = React.useState('');
-const [lastName, setLastName] = React.useState('');
-// Handle form submission to display greeting
-const handleClick = () => {
- // Basic JavaScript validation for empty fields
- if (!firstName || !lastName) {
- alert('Both First Name and Last Name are required!');
- } else {
- alert(`Hello ${firstName} ${lastName}!`);
- }
-};
-return (
- <div
- style={{
- display: 'flex',
- justifyContent: 'center',
- alignItems: 'center',
- minHeight: '100vh', // Full viewport height
- }}
- >
- <div style={{ display: 'flex', flexDirection: 'column', gap: '16px'
-}}>
- {/* First Name TextField */}
- <TextField
- label="First Name"
- variant="outlined"
- value={firstName}
- onChange={(e) => setFirstName(e.target.value)}
- />
- 
- {/* Last Name TextField */}
- <TextField
- label="Last Name"
- variant="outlined"
- value={lastName}
- onChange={(e) => setLastName(e.target.value)}
- />
- {/* Greet Me Button */}
- <Button variant="contained" onClick={handleClick}>
- Greet Me
- </Button>
- </div>
- </div>
-);
+#include <stdio.h>
+void main() {
+int n, i, bsize, rate, accept = 0, sent = 0, remain = 0;
+int packet[20];
+// Input number of packets and packet sizes
+printf("Enter the number of packets: ");
+scanf("%d", &n);
+printf("Enter the packet sizes:\n");
+for (i = 0; i < n; i++) {
+scanf("%d", &packet[i]);
 }
-export default App;
+// Input bucket size and transmission rate
+printf("Enter the bucket size: ");
+scanf("%d", &bsize);
+printf("Enter the transmission rate: ");
+scanf("%d", &rate);
+// Print the header for the output table
+printf("\nPacket\tPacket Size\tAccepted\tSent\
+tRemaining Data\n");
+for (i = 0; i < n; i++) {
+if (packet[i] >= bsize) {
+// Packet size equals bucket size, drop the packet
+accept = 0;
+sent = remain; // Sent the previous remaining data
+remain = 0; // Reset remaining data as bucket is now empty
+} else if (packet[i] <= bsize) {
+// Packet fits into the bucket, accept the packet
+accept = packet[i];
+if (remain + accept <= rate) {
+sent = remain + accept; // Send all data if it fits within the rate
+} else {
+sent = rate; // Send up to the rate if there's more data
+}
+remain = remain + accept - sent; // Update remaining data in the bucket
+} else {
+// Packet size exceeds bucket, drop the packet
+accept = 0;
+sent = remain; // Send any remaining data
+remain = 0; // Bucket is now empty
+}
+// Print the result for the current packet
+if (accept == 0) {
+// If packet is dropped
+printf("%d\t%d\t\tDropped\t\t%d\t\t%d\n", i + 1, packet[i], sent, remain);
+} else {
+// If packet is accepted
+printf("%d\t%d\t\t%d\t\t%d\t\t%d\n", i + 1, packet[i], accept, sent, remain);
+}
+}
+}
