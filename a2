@@ -1,49 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portfolio</title>
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-<nav class="navbar navbar-light bg-light px-3">
-<a class="navbar-brand" href="#">Portfolio</a>
-<div>
-<a class="mx-2" href="#projects">Projects</a>
-<a class="mx-2" href="#contact">Contact</a>
-</div>
-</nav>
-<div class="text-center py-5">
-<h1 class="display-4">Hi, I'm a Developer</h1>
-<a href="#projects" class="btn btn-primary">View Projects</a>
-</div>
-<div id="projects" class="container text-center my-5">
-<h2>Projects</h2>
-<div class="row">
-<div class="col-md-4">Project 1</div>
-<div class="col-md-4">Project 2</div>
-<div class="col-md-4">Project 3</div>
-</div>
-</div>
-<div id="contact" class="container text-center my-5">
-<h2>Contact</h2>
-<form>
-<input type="text" class="form-control mb-2" placeholder="Name" required>
-<input type="email" class="form-control mb-2" placeholder="Email" required>
-<textarea class="form-control mb-2" rows="3" placeholder="Message" required></textarea>
-<button type="submit" class="btn btn-primary">Send</button>
-</form>
-</div>
-<footer class="text-center py-3">
-<p>&copy; 2025</p>
-<a href="#"><i class="fab fa-github mx-2"></i></a>
-<a href="#"><i class="fab fa-linkedin mx-2"></i></a>
-</footer>
-<script
-src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+server.c
+--------------------------------
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <unistd.h>
+int main() {
+int server, client, file, n;
+char buffer[1024], filename[50];
+struct sockaddr_in addr;
+printf("\n[SERVER] Starting...\n");
+server = socket(AF_INET, SOCK_STREAM, 0);
+if (server < 0) {
+printf("[SERVER] Error creating socket.\n");
+return 1;
+}
+printf("[SERVER] Socket created successfully.\n");
+addr.sin_family = AF_INET;
+addr.sin_port = htons(8080);
+addr.sin_addr.s_addr = INADDR_ANY;
+if (bind(server, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+printf("[SERVER] Error binding socket.\n");
+return 1;
+}
+printf("[SERVER] Socket bound to port 8080.\n");
+listen(server, 5);
+printf("\n[SERVER] Waiting for client...\n");
+client = accept(server, NULL, NULL);
+printf("[SERVER] Client connected.\n");
+recv(client, filename, sizeof(filename), 0);
+printf("\n[SERVER] Client requested file: %s\n", filename);
+file = open(filename, O_RDONLY);
+if (file < 0) {
+send(client, "File not found\n", 15, 0);
+} else {
+while ((n = read(file, buffer, sizeof(buffer))) > 0)
+send(client, buffer, n, 0);
+close(file);
+}
+printf("\n[SERVER] File transfer complete. Closing connection.\n");
+close(client);
+close(server);
+return 0;
+}
+--------------------------------
+client.c
+--------------------------------
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+int main() {
+int client, n;
+char buffer[1024], filename[50];
+struct sockaddr_in addr;
+printf("\n[CLIENT] Starting...\n");
+client = socket(AF_INET, SOCK_STREAM, 0);
+if (client < 0) {
+printf("[CLIENT] Error creating socket.\n");
+return 1;
+}
+printf("[CLIENT] Socket created successfully.\n");
+addr.sin_family = AF_INET;
+addr.sin_port = htons(8080);
+addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+if (connect(client, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+printf("[CLIENT] Connection failed.\n");
+return 1;
+}
+printf("[CLIENT] Connected to server.\n");
+printf("\nEnter file name: ");
+scanf("%s", filename);
+send(client, filename, sizeof(filename), 0);
+printf("\n[CLIENT] Receiving file data...\n");
+while ((n = recv(client, buffer, sizeof(buffer), 0)) > 0)
+printf("%s", buffer);
+printf("\n[CLIENT] File transfer complete. Closing connection.\n");
+close(client);
+return 0;
+}
