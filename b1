@@ -1,48 +1,81 @@
-CountryDropdown.js
-function CountryDropdown(props) {
-function handleChange(event) {
-props.onSelect(event.target.value);
+progB1.tcl
+---------------------------------------
+#create a simulator object
+set ns [ new Simulator ]
+#open a trace file
+set tf [ open p1.tr w ]
+$ns trace-all $tf
+#open a nam trace file
+set nm [ open p1.nam w ]
+$ns namtrace-all $nm
+#creating nodes
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+#color the nodes
+$ns color 1 "red"
+$ns color 2 "green"
+#label the nodes
+$n0 label "source"
+$n1 label "source"
+$n2 label "destination"
+#create links,vary bandwidth to check the number of packets dropped
+$ns duplex-link $n0 $n1 10mb 300ms DropTail
+$ns duplex-link $n1 $n2 1mb 300ms DropTail
+#limiting the queue to only 10 packets
+$ns set queue-limit $n0 $n1 10
+$ns set queue-limit $n1 $n2 5
+#setup a UDP connection
+set udp0 [new Agent/UDP]
+$ns attach-agent $n0 $udp0
+#create a CBR traffic source and attach it to udp0
+set cbr1 [new Application/Traffic/CBR]
+$cbr1 set packetSize_ 800
+$cbr1 set interval_ 0.005
+$cbr1 attach-agent $udp0
+#create a UDP agent and attach it to node n1
+set udp1 [new Agent/UDP]
+$ns attach-agent $n1 $udp1
+#create a CBR traffic source and attach it to udp1
+set cbr2 [new Application/Traffic/CBR]
+$cbr2 set packetSize_ 800
+$cbr2 set interval_ 0.005
+$cbr2 attach-agent $udp1
+#create a null agent (a traffic sink) and attach it to node n3
+set null1 [new Agent/Null]
+$ns attach-agent $n2 $null1
+#set udp0 packets to red color and udp1 packets to blue color
+$udp0 set class_ 1
+$udp1 set class_ 2
+#connect the traffic sources with the traffic sink
+$ns connect $udp0 $null1
+$ns connect $udp1 $null1
+#define a 'finish' procedure
+proc finish { } {
+global ns tf nm
+exec nam p1.nam &
+$ns flush-trace
+close $tf
+close $nm
+exit 0
 }
-return (
-<select onChange={handleChange}>
-<option value="">Select a Country</option>
-{props.countries.map(function (country) {
-return (
-<option key={country.name} value={country.name}>
-{country.name}
-</option>
-);
-})}
-</select>
-);
+#schedule events for the CBR agents
+$ns at 0.1 "$cbr1 start"
+$ns at 0.1 "$cbr2 start"
+#call the finish procedure after 10 seconds of simulation time
+$ns at 10.0 "finish"
+#run the simulation
+$ns run
+---------------------------------------
+progB1.awk
+---------------------------------------
+BEGIN {
+count=0;
 }
-export default CountryDropdown; 
-------------------------------------------------------------------
-App.js
-import React, { useState } from "react";
-import CountryDropdown from "./CountryDropdown";
-function App() {
-const [capital, setCapital] = useState("");
-const countries = [
-{ name: "United States", capital: "Washington, D.C." },
-{ name: "India", capital: "New Delhi" },
-{ name: "France", capital: "Paris" },
-{ name: "Germany", capital: "Berlin" },
-{ name: "Japan", capital: "Tokyo" },
-];
-function handleCountrySelect(countryName) {
-const country = countries.find(function (c) {
-return c.name === countryName;
-});
-setCapital(country ? country.capital : "");
+{
+if($1=="d")
+count++;
 }
-return (
-<div>
-<h1>Country and Capital Finder</h1>
-<CountryDropdown countries={countries}
-onSelect={handleCountrySelect} />
-{capital && <p>Capital: {capital}</p>}
-</div>
-);
+END {
+printf("The total number of packets dropped due to congestion: %d\n\n",count);
 }
-export default App;
